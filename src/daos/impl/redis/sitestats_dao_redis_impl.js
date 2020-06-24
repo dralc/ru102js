@@ -55,11 +55,26 @@ const updateOptimized = async (meterReading) => {
   const client = redis.getClient();
   const key = keyGenerator.getSiteStatsKey(meterReading.siteId, meterReading.dateTime);
 
-  // Load script if needed, uses cached SHA if already loaded.
-  await compareAndUpdateScript.load();
+  const multi = client.multi();
+  multi.hset(
+    key,
+    'lastReportingTime',
+    timeUtils.getCurrentTimestamp(),
+  );
 
-  // START Challenge #3
-  // END Challenge #3
+  multi.hincrbyAsync(key, 'meterReadingCount', 1);
+  multi.expireAsync(key, weekSeconds);
+
+  // Load script if needed, uses cached SHA if already loaded.
+  const compareAndUpdateSha = await compareAndUpdateScript.load();
+
+  multi.evalsha(compareAndUpdateSha, 1, key, 'maxWhGenerated', meterReading.whGenerated, '>');
+  multi.evalsha(compareAndUpdateSha, 1, key, 'minWhGenerated', meterReading.whGenerated, '<');
+
+  const readingCapacity = meterReading.whGenerated - meterReading.whUsed;
+  multi.evalsha(compareAndUpdateSha, 1, key, 'maxCapacity', readingCapacity, '>');
+
+  await multi.exec();
 };
 /* eslint-enable */
 
@@ -106,5 +121,5 @@ const updateBasic = async (meterReading) => {
 
 module.exports = {
   findById,
-  update: updateBasic, // updateOptimized
+  update: updateOptimized,
 };
