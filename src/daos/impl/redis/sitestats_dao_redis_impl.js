@@ -74,7 +74,7 @@ const updateOptimized = async (meterReading) => {
   const readingCapacity = meterReading.whGenerated - meterReading.whUsed;
   multi.evalsha(compareAndUpdateSha, 1, key, 'maxCapacity', readingCapacity, '>');
 
-  await multi.exec();
+  await multi.execAsync();
 };
 /* eslint-enable */
 
