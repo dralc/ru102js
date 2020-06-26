@@ -172,10 +172,6 @@ const findByGeo = async (lat, lng, radius, radiusUnit) => {
  * @returns {Promise} - a Promise, resolving to an array of site objects.
  */
 const findByGeoWithExcessCapacity = async (lat, lng, radius, radiusUnit) => {
-  /* eslint-disable no-unreachable */
-  // Challenge #5, remove the next line...
-  return [];
-
   const client = redis.getClient();
 
   // Create a pipeline to send multiple commands in one round trip.
@@ -197,9 +193,7 @@ const findByGeoWithExcessCapacity = async (lat, lng, radius, radiusUnit) => {
   // Create a key for a temporary sorted set containing sites that fell
   // within the radius and their current capacities.
   const sitesInRadiusCapacitySortedSetKey = keyGenerator.getTemporaryKey();
-
-  // START Challenge #5
-  // END Challenge #5
+  setOperationsPipeline.zinterstore(sitesInRadiusCapacitySortedSetKey, 2, sitesInRadiusSortedSetKey, keyGenerator.getCapacityRankingKey(), 'WEIGHTS', 0, 1);
 
   // Expire the temporary sorted sets after 30 seconds, so that we
   // don't leave old keys on the server that we no longer need.
