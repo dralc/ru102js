@@ -7,14 +7,37 @@ const timeUtils = require('../../../utils/time_utils');
 /* eslint-disable no-unused-vars */
 
 // Challenge 7
+/**
+ *
+ * @param { string } name
+ * @param { {interval:number, maxHits:number} } opts
+ */
 const hitSlidingWindow = async (name, opts) => {
   const client = redis.getClient();
 
-  // START Challenge #7
-  return -2;
-  // END Challenge #7
-};
+  const key = keyGenerator.getKey(`limiter:${opts.interval}:${name}:${opts.maxHits}`);
+  const timenow = timeUtils.getCurrentTimestampMillis();
+  const val = `${timenow}-${Math.random()}`;
+  const multi = client.multi();
 
+  // Add a request 'hit'
+  multi.zadd(key, timenow, val);
+
+  // Remove any request hits that are no longer within the sliding window
+  multi.zremrangebyscore(key, 0, (timenow - opts.interval));
+
+  // Count the hits within the window
+  multi.zcardAsync(key);
+
+  const res = await multi.execAsync();
+  const hits = res[2];
+
+  if (hits > opts.maxHits) {
+    return -1;
+  }
+
+  return opts.maxHits - res[2];
+};
 /* eslint-enable */
 
 module.exports = {

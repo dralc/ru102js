@@ -43,7 +43,7 @@ const sleep = (milliseconds) => {
 const runSlidingWindowTests = async (name, limiterOpts, howMany) => {
   const results = [];
 
-  for (n = 0; n < howMany; n += 1) {
+  for (let n = 0; n < howMany; n += 1) {
     const remains = await redisRateLimiterDAO.hit(name, limiterOpts);
     results.push(remains);
   }
@@ -51,8 +51,7 @@ const runSlidingWindowTests = async (name, limiterOpts, howMany) => {
   return results;
 };
 
-// Challenge 7. Remove '.skip' to enable test.
-test.skip(`${testSuiteName}: hit (sliding window limit not exceeded)`, async () => {
+test(`${testSuiteName}: hit (sliding window limit not exceeded)`, async () => {
   const results = await runSlidingWindowTests('testresource', {
     interval: 10000,
     maxHits: 5,
@@ -62,7 +61,7 @@ test.skip(`${testSuiteName}: hit (sliding window limit not exceeded)`, async () 
 });
 
 // Challenge 7. Remove '.skip' to enable test.
-test.skip(`${testSuiteName}: hit (sliding window limit exceeded)`, async () => {
+test(`${testSuiteName}: hit (sliding window limit exceeded)`, async () => {
   let results = await runSlidingWindowTests('testresource2', {
     interval: 10000,
     maxHits: 5,
@@ -79,7 +78,7 @@ test.skip(`${testSuiteName}: hit (sliding window limit exceeded)`, async () => {
 });
 
 // Challenge 7. Remove '.skip' to enable test.
-test.skip(`${testSuiteName}: hit (sliding window ensure window slides)`, async () => {
+test(`${testSuiteName}: hit (sliding window ensure window slides)`, async () => {
   const sliderName = 'testresource4';
   const sliderOpts = {
     interval: 2000,
